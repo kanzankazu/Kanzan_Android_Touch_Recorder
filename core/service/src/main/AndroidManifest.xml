@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- FloatingOverlayService - Shows floating controls overlay -->
+        <service
+            android:name=".floating.FloatingOverlayService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Floating overlay controls for quick macro access" />
+        </service>
+
+        <!-- RecordingOverlayService - Invisible overlay to capture touches during recording -->
+        <service
+            android:name=".recording.RecordingOverlayService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Touch event capture overlay for macro recording" />
+        </service>
+    </application>
+</manifest>

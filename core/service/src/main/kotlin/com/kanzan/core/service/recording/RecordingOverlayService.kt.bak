@@ -1,0 +1,90 @@
+package com.kanzan.core.service.recording
+
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.graphics.PixelFormat
+import android.os.Build
+import android.os.IBinder
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.WindowManager
+import com.kanzan.core.service.KanzanAccessibilityService
+
+/**
+ * Invisible fullscreen overlay to capture touch events during recording
+ * 
+ * This service creates a transparent overlay that intercepts all touch events
+ * and passes them to TouchEventRecorder while allowing touches to pass through
+ * to apps below.
+ */
+class RecordingOverlayService : Service() {
+    
+    private lateinit var windowManager: WindowManager
+    private var overlayView: View? = null
+    
+    override fun onCreate() {
+        super.onCreate()
+        windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        createInvisibleOverlay()
+    }
+    
+    private fun createInvisibleOverlay() {
+        // Create invisible view that captures touches
+        overlayView = View(this).apply {
+            setOnTouchListener { _, event ->
+                // Pass event to recorder
+                KanzanAccessibilityService.getInstance()?.onTouchEventCaptured(event)
+                
+                // Return false to pass touch through to apps below
+                false
+            }
+        }
+        
+        val layoutParams = WindowManager.LayoutParams(
+            WindowManager.LayoutParams.MATCH_PARENT,
+            WindowManager.LayoutParams.MATCH_PARENT,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            } else {
+                @Suppress("DEPRECATION")
+                WindowManager.LayoutParams.TYPE_PHONE
+            },
+            // Important: NOT_TOUCHABLE to pass touches through, but still intercept them
+            WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
+            PixelFormat.TRANSLUCENT
+        ).apply {
+            gravity = Gravity.TOP or Gravity.START
+        }
+        
+        windowManager.addView(overlayView, layoutParams)
+    }
+    
+    override fun onDestroy() {
+        super.onDestroy()
+        overlayView?.let { windowManager.removeView(it) }
+        overlayView = null
+    }
+    
+    override fun onBind(intent: Intent): IBinder? = null
+    
+    companion object {
+        fun start(context: Context) {
+            val intent = Intent(context, RecordingOverlayService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                context.startForegroundService(intent)
+            } else {
+                context.startService(intent)
+            }
+        }
+        
+        fun stop(context: Context) {
+            val intent = Intent(context, RecordingOverlayService::class.java)
+            context.stopService(intent)
+        }
+    }
+}

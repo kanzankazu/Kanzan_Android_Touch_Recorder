@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kanzan Touch Recorder</string>
+    <string name="accessibility_service_description">Allows Kanzan Touch Recorder to record and replay touch gestures, and perform auto-clicking. This service requires accessibility permission to inject gestures into the system without root access.</string>
+</resources>
