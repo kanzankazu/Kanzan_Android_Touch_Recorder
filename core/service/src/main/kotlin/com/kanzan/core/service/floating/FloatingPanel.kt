@@ -1,16 +1,35 @@
 package com.kanzan.core.service.floating
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kanzan.core.service.ServiceState
 
@@ -25,19 +44,21 @@ fun FloatingPanel(
     onStopClick: () -> Unit,
     onCloseClick: () -> Unit,
     onHideClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     val isRecording = serviceState is ServiceState.Recording
     val isExecuting = when (serviceState) {
         is ServiceState.Playing,
         is ServiceState.Recording,
-        is ServiceState.AutoClicking -> true
+        is ServiceState.AutoClicking,
+            -> true
+
         else -> false
     }
-    
+
     Surface(
         modifier = modifier
-            .width(280.dp)
+            .width(320.dp)
             .shadow(elevation = 12.dp, shape = RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         color = Color.White.copy(alpha = 0.95f)
@@ -52,7 +73,7 @@ fun FloatingPanel(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Kanzan Controls",
+                    text = "Kanzan Touch Controls",
                     style = MaterialTheme.typography.titleMedium
                 )
                 IconButton(
@@ -65,9 +86,19 @@ fun FloatingPanel(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
+            // Hide button
+            OutlinedButton(
+                onClick = onHideClick,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Hide Floating Controls")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             // Action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -76,34 +107,28 @@ fun FloatingPanel(
                 Button(
                     onClick = onPlayClick,
                     enabled = serviceState is ServiceState.Idle,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
                 ) {
                     Text("Play")
                 }
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 Button(
                     onClick = onRecordClick,
-                    enabled = serviceState is ServiceState.Idle || serviceState is ServiceState.Recording,
-                    modifier = Modifier.weight(1f),
-                    colors = if (isRecording) {
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.error
-                        )
-                    } else {
-                        ButtonDefaults.buttonColors()
-                    }
+                    enabled = serviceState is ServiceState.Idle,
+                    modifier = Modifier,
+                    colors = ButtonDefaults.buttonColors()
                 ) {
-                    Text(if (isRecording) "Stop" else "Record")
+                    Text("Record")
                 }
-                
+
                 Spacer(modifier = Modifier.width(8.dp))
-                
+
                 Button(
                     onClick = onStopClick,
                     enabled = isExecuting,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.error
                     )
@@ -111,9 +136,9 @@ fun FloatingPanel(
                     Text("Stop")
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(12.dp))
-            
+
             // Progress indicator
             when (serviceState) {
                 is ServiceState.Recording -> {
@@ -127,6 +152,7 @@ fun FloatingPanel(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
                 is ServiceState.Playing -> {
                     LinearProgressIndicator(
                         progress = serviceState.progress,
@@ -138,11 +164,12 @@ fun FloatingPanel(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+
                 is ServiceState.AutoClicking -> {
                     val progress = if (serviceState.targetCount > 0) {
                         serviceState.clickCount.toFloat() / serviceState.targetCount
                     } else 0f
-                    
+
                     LinearProgressIndicator(
                         progress = progress,
                         modifier = Modifier.fillMaxWidth()
@@ -153,6 +180,7 @@ fun FloatingPanel(
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
+
                 is ServiceState.Error -> {
                     Text(
                         text = "Error: ${serviceState.message}",
@@ -160,6 +188,7 @@ fun FloatingPanel(
                         color = MaterialTheme.colorScheme.error
                     )
                 }
+
                 else -> {
                     Text(
                         text = "Ready",
@@ -167,16 +196,137 @@ fun FloatingPanel(
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            // Hide button
-            OutlinedButton(
-                onClick = onHideClick,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Hide Floating Controls")
-            }
+        }
+    }
+}
+
+// ==================== Previews ====================
+
+@Preview(name = "Idle State", showBackground = true)
+@Composable
+private fun FloatingPanelIdlePreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEEEEE))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingPanel(
+                serviceState = ServiceState.Idle,
+                onPlayClick = {},
+                onRecordClick = {},
+                onStopClick = {},
+                onCloseClick = {},
+                onHideClick = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Recording State", showBackground = true)
+@Composable
+private fun FloatingPanelRecordingPreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEEEEE))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingPanel(
+                serviceState = ServiceState.Recording(
+                    eventCount = 42,
+                    duration = 15000L
+                ),
+                onPlayClick = {},
+                onRecordClick = {},
+                onStopClick = {},
+                onCloseClick = {},
+                onHideClick = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Playing State", showBackground = true)
+@Composable
+private fun FloatingPanelPlayingPreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEEEEE))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingPanel(
+                serviceState = ServiceState.Playing(
+                    macroName = "Quick Swipe Macro",
+                    progress = 0.5f,
+                    currentEvent = 25,
+                    totalEvents = 50
+                ),
+                onPlayClick = {},
+                onRecordClick = {},
+                onStopClick = {},
+                onCloseClick = {},
+                onHideClick = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "AutoClicking State", showBackground = true)
+@Composable
+private fun FloatingPanelAutoClickingPreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEEEEE))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingPanel(
+                serviceState = ServiceState.AutoClicking(
+                    configName = "Farm Points",
+                    clickCount = 75,
+                    targetCount = 100
+                ),
+                onPlayClick = {},
+                onRecordClick = {},
+                onStopClick = {},
+                onCloseClick = {},
+                onHideClick = {}
+            )
+        }
+    }
+}
+
+@Preview(name = "Error State", showBackground = true)
+@Composable
+private fun FloatingPanelErrorPreview() {
+    MaterialTheme {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xFFEEEEEE))
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FloatingPanel(
+                serviceState = ServiceState.Error(
+                    message = "Failed to load macro data"
+                ),
+                onPlayClick = {},
+                onRecordClick = {},
+                onStopClick = {},
+                onCloseClick = {},
+                onHideClick = {}
+            )
         }
     }
 }

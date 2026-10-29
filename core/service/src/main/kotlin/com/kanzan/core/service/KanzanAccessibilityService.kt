@@ -90,6 +90,7 @@ class KanzanAccessibilityService : AccessibilityService() {
      * Called by RecordingOverlayService when capturing touches
      */
     fun onTouchEventCaptured(event: MotionEvent) {
+        android.util.Log.d("KanzanService", "onTouchEventCaptured: isRecording=${touchEventRecorder.isRecording()}, action=${event.action}")
         if (touchEventRecorder.isRecording()) {
             touchEventRecorder.recordEvent(event)
             
